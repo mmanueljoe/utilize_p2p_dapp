@@ -8,9 +8,35 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { useUtilize } from '@/hooks/useUtilize';
 
 export default function VendorsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    type: 'internet',
+    price: '',
+  });
+
+  const { createListing, isCreating, address } = useUtilize();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!address) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    try {
+      await createListing(formData.title, formData.type, formData.price);
+      setIsCreateDialogOpen(false);
+      setFormData({ title: '', type: 'internet', price: '' });
+      alert('Listing created successfully!');
+    } catch (error) {
+      console.error('Error creating listing:', error);
+      alert('Failed to create listing. Please try again.');
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
@@ -25,6 +51,7 @@ export default function VendorsPage() {
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
           className="bg-[#00A3E0] hover:bg-[#0088BD]"
+          disabled={!address}
         >
           <Plus className="mr-2 h-4 w-4" /> Create Listing
         </Button>
@@ -80,18 +107,24 @@ export default function VendorsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-[#1A1A1A] p-6 rounded-lg w-full max-w-md">
             <h2 className="text-2xl font-bold text-white mb-6">Create New Listing</h2>
-            <form className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g., Starlink Premium Subscription"
                   className="bg-[#252525] border-white/10"
+                  required
                 />
               </div>
               <div>
                 <Label htmlFor="type">Utility Type</Label>
-                <Select>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) => setFormData({ ...formData, type: value })}
+                >
                   <option value="internet">Internet</option>
                   <option value="electricity">Electricity</option>
                   <option value="water">Water</option>
@@ -104,19 +137,28 @@ export default function VendorsPage() {
                   id="price"
                   type="number"
                   step="0.001"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   placeholder="0.05"
                   className="bg-[#252525] border-white/10"
+                  required
                 />
               </div>
               <div className="flex justify-end space-x-4 mt-6">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setIsCreateDialogOpen(false)}
+                  disabled={isCreating}
                 >
                   Cancel
                 </Button>
-                <Button className="bg-[#00A3E0] hover:bg-[#0088BD]">
-                  Create Listing
+                <Button 
+                  type="submit"
+                  className="bg-[#00A3E0] hover:bg-[#0088BD]"
+                  disabled={isCreating}
+                >
+                  {isCreating ? 'Creating...' : 'Create Listing'}
                 </Button>
               </div>
             </form>
