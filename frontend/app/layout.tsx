@@ -1,11 +1,11 @@
 import './globals.css';
 import type { Metadata } from 'next';
-// import { Plus_Jakarta_Sans } from 'next/font/google';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { Web3Provider } from '../components/Web3Provider';
+import { Plus_Jakarta_Sans } from 'next/font/google';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { Web3Provider } from '@/components/Web3Provider';
 
-// const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] });
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Utilize - Where Crypto Powers Real Life',
@@ -19,8 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {/* className={`${jakarta.className} bg-[#0F0F0F]`} */}
-      <body>
+      <body className={`${jakarta.className} bg-[#0F0F0F]`}>
         <Web3Provider>
           <Navbar />
           <main className="min-h-screen pt-16">
