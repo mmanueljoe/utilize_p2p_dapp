@@ -3,6 +3,10 @@
 import { ArrowRight, Droplets, Wallet, CheckCircle2, Star, Zap, Wifi, Droplet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAccount } from 'wagmi';
+import { useWalletModal } from '@/hooks/useWalletModal';
+import { WalletConnectionModal } from '@/components/WalletConnectionModal';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -70,35 +74,76 @@ const Step = ({ icon, title, description }: {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('vendors');
+  const router = useRouter();
+  const { address } = useAccount();
+  const { isOpen, message, openModal, closeModal } = useWalletModal();
+
+  const handleExploreClick = () => {
+    router.push('/marketplace');
+  };
+
+  const handleListServiceClick = () => {
+    if (!address) {
+      openModal('Please connect your wallet to list your utility service');
+      return;
+    }
+    router.push('/vendors');
+  };
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-32 px-4">
+      <section className="relative pt-32 pb-40 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="flex justify-center mb-8">
-              <Droplets className="text-[#00A3E0] w-16 h-16" />
-            </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white to-[#00A3E0] bg-clip-text text-transparent">
+            <motion.div 
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="flex justify-center mb-12"
+            >
+              <Droplets className="text-[#00A3E0] w-20 h-20" />
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="text-5xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-white to-[#00A3E0] bg-clip-text text-transparent"
+            >
               Pay Bills in Crypto. Directly. No Middlemen.
-            </h1>
-            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto"
+            >
               Buy utilities from vendors or peers — electricity, water, internet — with ETH, USDC, or any token.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-[#00A3E0] rounded-lg font-semibold hover:bg-[#0088BD] transition-colors flex items-center justify-center">
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.8 }}
+              className="flex flex-col sm:flex-row gap-6 justify-center"
+            >
+              <button
+                onClick={handleExploreClick}
+                className="px-8 py-4 bg-[#00A3E0] rounded-lg font-semibold hover:bg-[#0088BD] transition-all transform hover:scale-105 flex items-center justify-center group"
+              >
                 Explore Utilities
-                <ArrowRight className="ml-2" size={20} />
+                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
               </button>
-              <button className="px-8 py-3 bg-[#1A1A1A] rounded-lg font-semibold hover:bg-[#252525] transition-colors">
+              <button
+                onClick={handleListServiceClick}
+                className="px-8 py-4 bg-[#1A1A1A] rounded-lg font-semibold hover:bg-[#252525] transition-all transform hover:scale-105 border border-white/10"
+              >
                 List Your Service
               </button>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -176,6 +221,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <WalletConnectionModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        message={message}
+      />
     </div>
   );
 }

@@ -1,10 +1,37 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Search, Filter } from 'lucide-react';
 import { UtilityCard } from '@/components/UtilityCard';
+import { MarketplaceFilters } from '@/components/MarketplaceFilters';
+import { useUtilize } from '@/hooks/useUtilize';
+import { useState, useEffect } from 'react';
+import { formatEther } from 'ethers/lib/utils';
 
 export default function Marketplace() {
+  const { listings, fetchListings } = useUtilize();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    minPrice: '',
+    maxPrice: '',
+    type: 'all'
+  });
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
+
+  const filteredListings = listings.filter(listing => {
+    if (listing.isFulfilled) return false;
+    
+    const matchesSearch = listing.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filters.type === 'all' || listing.utilityType === filters.type;
+    const price = parseFloat(formatEther(listing.price));
+    const matchesMinPrice = !filters.minPrice || price >= parseFloat(filters.minPrice);
+    const matchesMaxPrice = !filters.maxPrice || price <= parseFloat(filters.maxPrice);
+
+    return matchesSearch && matchesType && matchesMinPrice && matchesMaxPrice;
+  });
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <motion.div
@@ -14,58 +41,29 @@ export default function Marketplace() {
       >
         <h1 className="text-4xl font-bold text-white mb-8">Utility Marketplace</h1>
 
-        {/* Search and Filter Section */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search utilities..."
-              className="w-full bg-[#1A1A1A] text-white pl-10 pr-4 py-2 rounded-lg border border-white/10 focus:border-[#00A3E0] focus:outline-none"
-            />
-          </div>
-          <button className="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg border border-white/10 hover:bg-[#252525] transition-colors flex items-center gap-2">
-            <Filter size={20} />
-            Filters
-          </button>
-        </div>
-
-        {/* Categories */}
-        <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
-          {['All', 'Electricity', 'Internet', 'Water', 'Gas'].map((category) => (
-            <button
-              key={category}
-              className="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg border border-white/10 hover:bg-[#252525] transition-colors whitespace-nowrap"
-            >
-              {category}
-            </button>
-          ))}
-        </div>
+        <MarketplaceFilters
+          onSearch={setSearchQuery}
+          onFilter={setFilters}
+        />
 
         {/* Listings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <UtilityCard
-            title="Starlink Premium"
-            seller="Starlink Official"
-            price="0.05 ETH/month"
-            rating={4.9}
-            type="internet"
-          />
-          <UtilityCard
-            title="ComEd Electricity"
-            seller="Alex Thompson"
-            price="0.02 ETH/month"
-            rating={4.8}
-            type="electricity"
-          />
-          <UtilityCard
-            title="City Water Service"
-            seller="Water Authority"
-            price="0.015 ETH/month"
-            rating={4.7}
-            type="water"
-          />
-          {/* Add more cards as needed */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          {filteredListings.map((listing, index) => (
+            <UtilityCard
+              key={`${listing.id}-${index}`}
+              id={listing.id}
+              title={listing.title}
+              seller={listing.seller}
+              price={listing.price}
+              rating={4.9}
+              type={listing.utilityType}
+            />
+          ))}
+          {filteredListings.length === 0 && (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-400 text-lg">No listings found matching your criteria.</p>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

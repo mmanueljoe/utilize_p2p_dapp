@@ -73,20 +73,20 @@ export default function About() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
-              name: 'Alex Chen',
-              role: 'Founder & CEO',
-              image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
+              name: 'Abduali Zesumg Osman',
+              role: 'Smart Contract Developer',
+              image: 'https://avatars.githubusercontent.com/u/148546209?v=4',
             },
             {
-              name: 'Sarah Johnson',
-              role: 'CTO',
-              image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
+              name: 'Emmanuel Joe Letsu',
+              role: 'Fullstack Developer',
+              image: 'https://avatars.githubusercontent.com/u/98291413?v=4',
             },
-            {
-              name: 'Michael Brown',
-              role: 'Head of Operations',
-              image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
-            },
+            // {
+            //   name: 'Michael Brown',
+            //   role: 'Head of Operations',
+            //   image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
+            // },
           ].map((member) => (
             <div key={member.name} className="text-center">
               <img

@@ -3,39 +3,22 @@
 import { motion } from 'framer-motion';
 import { Plus, Shield, Star } from 'lucide-react';
 import { useState } from 'react';
-import { Dialog } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
+import { VendorForm } from '@/components/VendorForm';
 import { useUtilize } from '@/hooks/useUtilize';
+import { useWalletModal } from '@/hooks/useWalletModal';
+import { WalletConnectionModal } from '@/components/WalletConnectionModal';
 
 export default function VendorsPage() {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    type: 'internet',
-    price: '',
-  });
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const { address } = useUtilize();
+  const { isOpen, message, openModal, closeModal } = useWalletModal();
 
-  const { createListing, isCreating, address } = useUtilize();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateClick = () => {
     if (!address) {
-      alert('Please connect your wallet first');
+      openModal('Please connect your wallet to create a listing');
       return;
     }
-
-    try {
-      await createListing(formData.title, formData.type, formData.price);
-      setIsCreateDialogOpen(false);
-      setFormData({ title: '', type: 'internet', price: '' });
-      alert('Listing created successfully!');
-    } catch (error) {
-      console.error('Error creating listing:', error);
-      alert('Failed to create listing. Please try again.');
-    }
+    setIsFormOpen(true);
   };
 
   return (
@@ -48,17 +31,16 @@ export default function VendorsPage() {
         >
           Vendor Dashboard
         </motion.h1>
-        <Button
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-[#00A3E0] hover:bg-[#0088BD]"
-          disabled={!address}
+        <button
+          onClick={handleCreateClick}
+          className="px-4 py-2 bg-[#00A3E0] text-white rounded-lg hover:bg-[#0088BD] transition-colors flex items-center gap-2"
         >
-          <Plus className="mr-2 h-4 w-4" /> Create Listing
-        </Button>
+          <Plus size={20} />
+          Create Listing
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Vendor Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,69 +84,13 @@ export default function VendorsPage() {
         </motion.div>
       </div>
 
-      {/* Create Listing Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-[#1A1A1A] p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-2xl font-bold text-white mb-6">Create New Listing</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g., Starlink Premium Subscription"
-                  className="bg-[#252525] border-white/10"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="type">Utility Type</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value })}
-                >
-                  <option value="internet">Internet</option>
-                  <option value="electricity">Electricity</option>
-                  <option value="water">Water</option>
-                  <option value="gas">Gas</option>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="price">Price (ETH)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.001"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.05"
-                  className="bg-[#252525] border-white/10"
-                  required
-                />
-              </div>
-              <div className="flex justify-end space-x-4 mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateDialogOpen(false)}
-                  disabled={isCreating}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  className="bg-[#00A3E0] hover:bg-[#0088BD]"
-                  disabled={isCreating}
-                >
-                  {isCreating ? 'Creating...' : 'Create Listing'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </Dialog>
+      {isFormOpen && <VendorForm onClose={() => setIsFormOpen(false)} />}
+      
+      <WalletConnectionModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        message={message}
+      />
     </div>
   );
 }

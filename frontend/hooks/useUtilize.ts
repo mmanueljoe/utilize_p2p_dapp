@@ -3,7 +3,7 @@
 import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { UTILIZE_ABI, UTILIZE_ADDRESS } from '@/lib/contracts/Utilize';
 import { parseEther, formatEther } from 'viem';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export type Listing = {
   id: number;
@@ -22,24 +22,37 @@ export function useUtilize() {
   const { data: listingsData, refetch } = useReadContract({
     address: UTILIZE_ADDRESS,
     abi: UTILIZE_ABI,
-    functionName: 'listings',
+    functionName: 'getListings',
   });
 
-  // Contract write functions
-  const { writeContractAsync: writeContract, isPending: isTransactionPending } = useWriteContract();
+  const fetchListings = useCallback(async () => {
+    try {
+      await refetch();
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+    }
+  }, [refetch]);
 
-  const handleCreateListing = async (title: string, utilityType: string, price: string) => {
+  // Contract write actions
+  const { writeContractAsync, isPending } = useWriteContract();
+
+  // Create listing handler
+  const handleCreateListing = async (
+    title: string,
+    utilityType: string,
+    price: string
+  ) => {
     if (!address) throw new Error('Please connect your wallet');
     
     try {
       const priceInWei = parseEther(price);
-      const txHash = await writeContract({
+      const txHash = await writeContractAsync({
         address: UTILIZE_ADDRESS,
         abi: UTILIZE_ABI,
         functionName: 'createListing',
         args: [title, utilityType, priceInWei],
       });
-      await refetch();
+      await fetchListings();
       return txHash;
     } catch (error) {
       console.error('Error creating listing:', error);
@@ -47,19 +60,20 @@ export function useUtilize() {
     }
   };
 
+  // Payment handler
   const handlePayment = async (listingId: number, amount: string) => {
     if (!address) throw new Error('Please connect your wallet');
     
     try {
       const valueInWei = parseEther(amount);
-      const txHash = await writeContract({
+      const txHash = await writeContractAsync({
         address: UTILIZE_ADDRESS,
         abi: UTILIZE_ABI,
         functionName: 'pay',
         args: [BigInt(listingId)],
         value: valueInWei,
       });
-      await refetch();
+      await fetchListings();
       return txHash;
     } catch (error) {
       console.error('Error processing payment:', error);
@@ -83,10 +97,11 @@ export function useUtilize() {
 
   return {
     listings,
+    fetchListings,
     createListing: handleCreateListing,
     payForUtility: handlePayment,
-    isCreating: isTransactionPending,
-    isPaying: isTransactionPending,
+    isCreating: isPending,
+    isPaying: isPending,
     address,
   };
 }

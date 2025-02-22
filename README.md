@@ -7,7 +7,7 @@
 **Utilize** revolutionizes utility payments by creating a peer-to-peer marketplace where crypto holders directly pay for real-world services using digital assets - no fiat conversion required. Built on Arbitrum for low fees and Ethereum compatibility.
 
 ➡️ **Live Demo**:
-📜 **Contract Address**: `0x46De9a5D781B1a738efee02B14a4FEe3BAe72D9b` (Verified on [Arbiscan](https://sepolia.arbiscan.io))
+📜 **Contract Address**: `0x2c1D83FE23899Cfae5b94C50d8ffc7aE387D58f0` (Verified on [Arbiscan](https://sepolia.arbiscan.io))
 
 
 
