@@ -4,7 +4,7 @@ import { Star, Zap, Wifi, Droplet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useUtilize } from '@/hooks/useUtilize';
-import { formatEther } from 'ethers/lib/utils';
+import { formatEther } from 'viem';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -38,7 +38,8 @@ export const UtilityCard = ({
 
     try {
       setIsProcessing(true);
-      await payForUtility(id, formatEther(price));
+      // Pass the price directly as a string (in ETH units)
+      await payForUtility(id, price);
       alert('Payment successful!');
     } catch (error) {
       console.error('Payment failed:', error);
@@ -71,7 +72,8 @@ export const UtilityCard = ({
           <span className="text-white">{rating}/5</span>
         </div>
         <div className="text-right">
-          <p className="text-[#00A3E0] font-semibold">{formatEther(price)} ETH</p>
+          {/* Display already formatted price */}
+          <p className="text-[#00A3E0] font-semibold">{price} ETH</p>
           <p className="text-sm text-gray-400">≈ $150/month</p>
         </div>
       </div>

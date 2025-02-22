@@ -1,8 +1,8 @@
 'use client';
 
-import { useContractRead, useContractWrite, usePrepareContractWrite, useAccount } from 'wagmi';
+import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { UTILIZE_ABI, UTILIZE_ADDRESS } from '@/lib/contracts/Utilize';
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther, formatEther } from 'viem';
 import { useState, useEffect } from 'react';
 
 export type Listing = {
@@ -19,55 +19,28 @@ export function useUtilize() {
   const [listings, setListings] = useState<Listing[]>([]);
 
   // Fetch all listings
-  const { data: listingsData, refetch } = useContractRead({
-    address: UTILIZE_ADDRESS as `0x${string}`,
+  const { data: listingsData, refetch } = useReadContract({
+    address: UTILIZE_ADDRESS,
     abi: UTILIZE_ABI,
     functionName: 'listings',
-    watch: true,
   });
 
-  // Create listing
-  const { config: createListingConfig } = usePrepareContractWrite({
-    address: UTILIZE_ADDRESS as `0x${string}`,
-    abi: UTILIZE_ABI,
-    functionName: 'createListing',
-  });
-
-  const { writeAsync: createListing, isLoading: isCreating } = useContractWrite(createListingConfig);
-
-  // Pay for utility
-  const { config: payConfig } = usePrepareContractWrite({
-    address: UTILIZE_ADDRESS as `0x${string}`,
-    abi: UTILIZE_ABI,
-    functionName: 'pay',
-  });
-
-  const { writeAsync: payForUtility, isLoading: isPaying } = useContractWrite(payConfig);
-
-  useEffect(() => {
-    if (listingsData) {
-      const formattedListings = (listingsData as any[]).map((listing, index) => ({
-        id: index,
-        seller: listing.seller,
-        title: listing.title,
-        utilityType: listing.utilityType,
-        price: listing.price.toString(),
-        isFulfilled: listing.isFulfilled,
-      }));
-      setListings(formattedListings);
-    }
-  }, [listingsData]);
+  // Contract write functions
+  const { writeContractAsync: writeContract, isPending: isTransactionPending } = useWriteContract();
 
   const handleCreateListing = async (title: string, utilityType: string, price: string) => {
     if (!address) throw new Error('Please connect your wallet');
     
     try {
       const priceInWei = parseEther(price);
-      const tx = await createListing?.({
-        args: [title, utilityType, priceInWei.toString()],
+      const txHash = await writeContract({
+        address: UTILIZE_ADDRESS,
+        abi: UTILIZE_ABI,
+        functionName: 'createListing',
+        args: [title, utilityType, priceInWei],
       });
-      await tx?.wait();
       await refetch();
+      return txHash;
     } catch (error) {
       console.error('Error creating listing:', error);
       throw error;
@@ -79,24 +52,41 @@ export function useUtilize() {
     
     try {
       const valueInWei = parseEther(amount);
-      const tx = await payForUtility?.({
-        args: [listingId],
+      const txHash = await writeContract({
+        address: UTILIZE_ADDRESS,
+        abi: UTILIZE_ABI,
+        functionName: 'pay',
+        args: [BigInt(listingId)],
         value: valueInWei,
       });
-      await tx?.wait();
       await refetch();
+      return txHash;
     } catch (error) {
       console.error('Error processing payment:', error);
       throw error;
     }
   };
 
+  useEffect(() => {
+    if (listingsData) {
+      const formattedListings = (listingsData as any[]).map((listing, index) => ({
+        id: index,
+        seller: listing.seller,
+        title: listing.title,
+        utilityType: listing.utilityType,
+        price: formatEther(listing.price),
+        isFulfilled: listing.isFulfilled,
+      }));
+      setListings(formattedListings);
+    }
+  }, [listingsData]);
+
   return {
     listings,
     createListing: handleCreateListing,
     payForUtility: handlePayment,
-    isCreating,
-    isPaying,
+    isCreating: isTransactionPending,
+    isPaying: isTransactionPending,
     address,
   };
 }
